@@ -1,0 +1,99 @@
+syntax = "proto3";
+package omnii;
+
+service OmniiService {
+  // Enrollment - unauthenticated, only needs valid enrollment code
+  rpc Enroll (EnrollRequest) returns (EnrollResponse);
+
+  // All methods below require token authentication
+  rpc Handshake (HandshakeRequest) returns (HandshakeResponse);
+  rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
+  rpc ReportUpdates (UpdateReportRequest) returns (UpdateReportResponse);
+
+  // Trigger an update on the addon (server -> addon request)
+  rpc TriggerUpdate (TriggerUpdateRequest) returns (TriggerUpdateResponse);
+}
+
+// Enrollment messages
+message EnrollRequest {
+  string code = 1;  // The enrollment code from the UI
+}
+message EnrollResponse {
+  bool success = 1;
+  string error = 2;           // Error message if success=false
+  string instance_id = 3;     // e.g. "ha-a1b2"
+  string token = 4;           // The secret token for authentication
+}
+
+// Handshake messages
+message HandshakeRequest {
+  string addon_id = 1;
+  string token = 2;
+}
+message HandshakeResponse {
+  string session_id = 1;
+  string status = 2;
+}
+
+// System information from Supervisor /info API
+message SystemInfo {
+  string supervisor = 1;
+  string homeassistant = 2;
+  string hassos = 3;          // May be empty if not HA OS
+  string docker = 4;
+  string hostname = 5;
+  string operating_system = 6;
+  string machine = 7;
+  string arch = 8;
+  string channel = 9;         // stable, beta, dev
+  string state = 10;          // running, etc.
+}
+
+// Heartbeat messages - optional system info
+message HeartbeatRequest {
+  string session_id = 1;
+  SystemInfo system_info = 2;              // Optional - sent periodically
+  int64 client_timestamp = 3;              // Client-side timestamp for RTT calculation
+}
+message HeartbeatResponse {
+  bool alive = 1;
+  int64 time = 2;
+  int64 latency_ms = 3;                    // Round-trip latency in milliseconds
+}
+
+// Update reporting messages
+message ComponentUpdate {
+  string component_type = 1;     // "core", "os", "supervisor", "addon"
+  string slug = 2;               // Addon slug (or empty)
+  string name = 3;               // Addon name (or empty)
+  string version = 4;
+  string version_latest = 5;
+  bool update_available = 6;
+}
+
+message UpdateReport {
+  int64 generated_at = 1;        // Unix timestamp (seconds)
+  repeated ComponentUpdate components = 2;
+}
+
+message UpdateReportRequest {
+  string session_id = 1;
+  UpdateReport report = 2;
+}
+
+message UpdateReportResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+// Trigger update messages - server asks addon to perform an update
+message TriggerUpdateRequest {
+  string session_id = 1;
+  string update_type = 2;     // "core", "os", "supervisor", "addon"
+  string addon_slug = 3;      // Only needed if update_type is "addon"
+}
+message TriggerUpdateResponse {
+  bool success = 1;
+  string error = 2;
+  string message = 3;         // Status message (e.g., "Update started")
+}

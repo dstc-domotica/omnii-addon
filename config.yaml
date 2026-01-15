@@ -1,7 +1,7 @@
-name: "Hello world"
-description: "My first real add-on!"
+name: "Omnii Server Connector"
+description: "Connect Home Assistant to Omnii Server for centralized management"
 version: "1.0.0"
-slug: "hello_world"
+slug: "omnii-connector"
 init: false
 arch:
   - aarch64
@@ -9,3 +9,12 @@ arch:
   - armhf
   - armv7
   - i386
+hassio_api: true
+hassio_role: default
+homeassistant_api: true
+options:
+  server_url: ""
+  enrollment_code: ""
+schema:
+  server_url: str
+  enrollment_code: str
