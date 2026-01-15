@@ -65,6 +65,10 @@ class SupervisorClient:
         """Fetch Home Assistant Core info from Supervisor /core/info API."""
         return self._get_data("/core/info")
 
+    def get_core_stats(self) -> Optional[Dict]:
+        """Fetch Home Assistant Core stats from Supervisor /core/stats API."""
+        return self._get_data("/core/stats")
+
     def get_os_info(self) -> Optional[Dict]:
         """Fetch OS info from Supervisor /os/info API."""
         return self._get_data("/os/info")

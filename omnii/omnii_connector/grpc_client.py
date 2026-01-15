@@ -6,7 +6,11 @@ import grpc
 
 from grpc_stubs import omnnii_pb2, omnnii_pb2_grpc
 
-from .constants import HEARTBEAT_INTERVAL_SECONDS, UPDATE_REPORT_INTERVAL_SECONDS
+from .constants import (
+    HEARTBEAT_INTERVAL_SECONDS,
+    STATS_REPORT_INTERVAL_SECONDS,
+    UPDATE_REPORT_INTERVAL_SECONDS,
+)
 from .enrollment_store import load_enrollment_data, save_enrollment_data
 from .supervisor_api import SupervisorClient
 
@@ -26,6 +30,7 @@ class OmniiGrpcClient:
         self.start_time = time.time()
         self.heartbeat_timer: Optional[threading.Timer] = None
         self.update_report_timer: Optional[threading.Timer] = None
+        self.stats_report_timer: Optional[threading.Timer] = None
         self.last_full_info_time: float = 0
 
         self.supervisor = SupervisorClient()
@@ -111,6 +116,7 @@ class OmniiGrpcClient:
         self.send_heartbeat(include_full_info=True)
         self._schedule_heartbeat()
         self.start_update_reporting()
+        self.start_stats_reporting()
 
     def _schedule_heartbeat(self) -> None:
         if not self.running:
@@ -234,6 +240,69 @@ class OmniiGrpcClient:
         except grpc.RpcError as e:
             print(f"Update report failed: {e.code()}: {e.details()}")
 
+    def start_stats_reporting(self) -> None:
+        if not self.running:
+            return
+        print(
+            f"Starting core stats reporting thread ({STATS_REPORT_INTERVAL_SECONDS} second interval)..."
+        )
+        self.send_stats_report()
+        self._schedule_stats_report()
+
+    def _schedule_stats_report(self) -> None:
+        if not self.running:
+            return
+        self.stats_report_timer = threading.Timer(
+            STATS_REPORT_INTERVAL_SECONDS, self._stats_report_loop
+        )
+        self.stats_report_timer.daemon = True
+        self.stats_report_timer.start()
+
+    def _stats_report_loop(self) -> None:
+        if not self.running:
+            return
+
+        self.send_stats_report()
+
+        if self.running:
+            self._schedule_stats_report()
+
+    def send_stats_report(self) -> None:
+        if not self.running or not self.session_id or not self.stub:
+            return
+
+        try:
+            stats = self.supervisor.get_core_stats()
+            if not stats:
+                print("Core stats unavailable; skipping stats report")
+                return
+
+            report = omnnii_pb2.StatsReport(generated_at=int(time.time()))
+            report.stats.CopyFrom(
+                omnnii_pb2.CoreStats(
+                    cpu_percent=float(stats.get("cpu_percent") or 0.0),
+                    memory_usage=int(stats.get("memory_usage") or 0),
+                    memory_limit=int(stats.get("memory_limit") or 0),
+                    memory_percent=float(stats.get("memory_percent") or 0.0),
+                    network_tx=int(stats.get("network_tx") or 0),
+                    network_rx=int(stats.get("network_rx") or 0),
+                    blk_read=int(stats.get("blk_read") or 0),
+                    blk_write=int(stats.get("blk_write") or 0),
+                )
+            )
+
+            request = omnnii_pb2.StatsReportRequest(
+                session_id=self.session_id, report=report
+            )
+            response = self.stub.ReportStats(request, timeout=10)
+
+            if response.accepted:
+                print("Core stats report sent (accepted)")
+            else:
+                print(f"Core stats report rejected: {response.message}")
+        except grpc.RpcError as e:
+            print(f"Core stats report failed: {e.code()}: {e.details()}")
+
     def stop(self) -> None:
         print("Stopping add-on...")
         self.running = False
@@ -243,6 +312,9 @@ class OmniiGrpcClient:
         if self.update_report_timer:
             self.update_report_timer.cancel()
             self.update_report_timer = None
+        if self.stats_report_timer:
+            self.stats_report_timer.cancel()
+            self.stats_report_timer = None
         if self.channel:
             self.channel.close()
             self.channel = None

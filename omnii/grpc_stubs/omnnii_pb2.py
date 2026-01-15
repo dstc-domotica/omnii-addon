@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='omnnii.proto',
   package='omnii',
   syntax='proto3',
-  serialized_pb=_b('\n\x0comnnii.proto\x12\x05omnii\"\x1d\n\rEnrollRequest\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\"T\n\x0e\x45nrollResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x13\n\x0binstance_id\x18\x03 \x01(\t\x12\r\n\x05token\x18\x04 \x01(\t\"3\n\x10HandshakeRequest\x12\x10\n\x08\x61\x64\x64on_id\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\"7\n\x11HandshakeResponse\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\"\xc2\x01\n\nSystemInfo\x12\x12\n\nsupervisor\x18\x01 \x01(\t\x12\x15\n\rhomeassistant\x18\x02 \x01(\t\x12\x0e\n\x06hassos\x18\x03 \x01(\t\x12\x0e\n\x06\x64ocker\x18\x04 \x01(\t\x12\x10\n\x08hostname\x18\x05 \x01(\t\x12\x18\n\x10operating_system\x18\x06 \x01(\t\x12\x0f\n\x07machine\x18\x07 \x01(\t\x12\x0c\n\x04\x61rch\x18\x08 \x01(\t\x12\x0f\n\x07\x63hannel\x18\t \x01(\t\x12\r\n\x05state\x18\n \x01(\t\"h\n\x10HeartbeatRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12&\n\x0bsystem_info\x18\x02 \x01(\x0b\x32\x11.omnii.SystemInfo\x12\x18\n\x10\x63lient_timestamp\x18\x03 \x01(\x03\"D\n\x11HeartbeatResponse\x12\r\n\x05\x61live\x18\x01 \x01(\x08\x12\x0c\n\x04time\x18\x02 \x01(\x03\x12\x12\n\nlatency_ms\x18\x03 \x01(\x03\"\x88\x01\n\x0f\x43omponentUpdate\x12\x16\n\x0e\x63omponent_type\x18\x01 \x01(\t\x12\x0c\n\x04slug\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0f\n\x07version\x18\x04 \x01(\t\x12\x16\n\x0eversion_latest\x18\x05 \x01(\t\x12\x18\n\x10update_available\x18\x06 \x01(\x08\"P\n\x0cUpdateReport\x12\x14\n\x0cgenerated_at\x18\x01 \x01(\x03\x12*\n\ncomponents\x18\x02 \x03(\x0b\x32\x16.omnii.ComponentUpdate\"N\n\x13UpdateReportRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12#\n\x06report\x18\x02 \x01(\x0b\x32\x13.omnii.UpdateReport\"9\n\x14UpdateReportResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"S\n\x14TriggerUpdateRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x13\n\x0bupdate_type\x18\x02 \x01(\t\x12\x12\n\naddon_slug\x18\x03 \x01(\t\"H\n\x15TriggerUpdateResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t2\xdb\x02\n\x0cOmniiService\x12\x35\n\x06\x45nroll\x12\x14.omnii.EnrollRequest\x1a\x15.omnii.EnrollResponse\x12>\n\tHandshake\x12\x17.omnii.HandshakeRequest\x1a\x18.omnii.HandshakeResponse\x12>\n\tHeartbeat\x12\x17.omnii.HeartbeatRequest\x1a\x18.omnii.HeartbeatResponse\x12H\n\rReportUpdates\x12\x1a.omnii.UpdateReportRequest\x1a\x1b.omnii.UpdateReportResponse\x12J\n\rTriggerUpdate\x12\x1b.omnii.TriggerUpdateRequest\x1a\x1c.omnii.TriggerUpdateResponseb\x06proto3')
+  serialized_pb=_b('\n\x0comnnii.proto\x12\x05omnii\"\x1d\n\rEnrollRequest\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\"T\n\x0e\x45nrollResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x13\n\x0binstance_id\x18\x03 \x01(\t\x12\r\n\x05token\x18\x04 \x01(\t\"3\n\x10HandshakeRequest\x12\x10\n\x08\x61\x64\x64on_id\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\"7\n\x11HandshakeResponse\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\"\xc2\x01\n\nSystemInfo\x12\x12\n\nsupervisor\x18\x01 \x01(\t\x12\x15\n\rhomeassistant\x18\x02 \x01(\t\x12\x0e\n\x06hassos\x18\x03 \x01(\t\x12\x0e\n\x06\x64ocker\x18\x04 \x01(\t\x12\x10\n\x08hostname\x18\x05 \x01(\t\x12\x18\n\x10operating_system\x18\x06 \x01(\t\x12\x0f\n\x07machine\x18\x07 \x01(\t\x12\x0c\n\x04\x61rch\x18\x08 \x01(\t\x12\x0f\n\x07\x63hannel\x18\t \x01(\t\x12\r\n\x05state\x18\n \x01(\t\"h\n\x10HeartbeatRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12&\n\x0bsystem_info\x18\x02 \x01(\x0b\x32\x11.omnii.SystemInfo\x12\x18\n\x10\x63lient_timestamp\x18\x03 \x01(\x03\"D\n\x11HeartbeatResponse\x12\r\n\x05\x61live\x18\x01 \x01(\x08\x12\x0c\n\x04time\x18\x02 \x01(\x03\x12\x12\n\nlatency_ms\x18\x03 \x01(\x03\"\x88\x01\n\x0f\x43omponentUpdate\x12\x16\n\x0e\x63omponent_type\x18\x01 \x01(\t\x12\x0c\n\x04slug\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0f\n\x07version\x18\x04 \x01(\t\x12\x16\n\x0eversion_latest\x18\x05 \x01(\t\x12\x18\n\x10update_available\x18\x06 \x01(\x08\"P\n\x0cUpdateReport\x12\x14\n\x0cgenerated_at\x18\x01 \x01(\x03\x12*\n\ncomponents\x18\x02 \x03(\x0b\x32\x16.omnii.ComponentUpdate\"N\n\x13UpdateReportRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12#\n\x06report\x18\x02 \x01(\x0b\x32\x13.omnii.UpdateReport\"9\n\x14UpdateReportResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xb1\x01\n\tCoreStats\x12\x13\n\x0b\x63pu_percent\x18\x01 \x01(\x01\x12\x14\n\x0cmemory_usage\x18\x02 \x01(\x03\x12\x14\n\x0cmemory_limit\x18\x03 \x01(\x03\x12\x16\n\x0ememory_percent\x18\x04 \x01(\x01\x12\x12\n\nnetwork_tx\x18\x05 \x01(\x03\x12\x12\n\nnetwork_rx\x18\x06 \x01(\x03\x12\x10\n\x08\x62lk_read\x18\x07 \x01(\x03\x12\x11\n\tblk_write\x18\x08 \x01(\x03\"D\n\x0bStatsReport\x12\x14\n\x0cgenerated_at\x18\x01 \x01(\x03\x12\x1f\n\x05stats\x18\x02 \x01(\x0b\x32\x10.omnii.CoreStats\"L\n\x12StatsReportRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\"\n\x06report\x18\x02 \x01(\x0b\x32\x12.omnii.StatsReport\"8\n\x13StatsReportResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"S\n\x14TriggerUpdateRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x13\n\x0bupdate_type\x18\x02 \x01(\t\x12\x12\n\naddon_slug\x18\x03 \x01(\t\"H\n\x15TriggerUpdateResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t2\xa1\x03\n\x0cOmniiService\x12\x35\n\x06\x45nroll\x12\x14.omnii.EnrollRequest\x1a\x15.omnii.EnrollResponse\x12>\n\tHandshake\x12\x17.omnii.HandshakeRequest\x1a\x18.omnii.HandshakeResponse\x12>\n\tHeartbeat\x12\x17.omnii.HeartbeatRequest\x1a\x18.omnii.HeartbeatResponse\x12H\n\rReportUpdates\x12\x1a.omnii.UpdateReportRequest\x1a\x1b.omnii.UpdateReportResponse\x12\x44\n\x0bReportStats\x12\x19.omnii.StatsReportRequest\x1a\x1a.omnii.StatsReportResponse\x12J\n\rTriggerUpdate\x12\x1b.omnii.TriggerUpdateRequest\x1a\x1c.omnii.TriggerUpdateResponseb\x06proto3')
 )
 
 
@@ -548,6 +548,200 @@ _UPDATEREPORTRESPONSE = _descriptor.Descriptor(
 )
 
 
+_CORESTATS = _descriptor.Descriptor(
+  name='CoreStats',
+  full_name='omnii.CoreStats',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='cpu_percent', full_name='omnii.CoreStats.cpu_percent', index=0,
+      number=1, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='memory_usage', full_name='omnii.CoreStats.memory_usage', index=1,
+      number=2, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='memory_limit', full_name='omnii.CoreStats.memory_limit', index=2,
+      number=3, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='memory_percent', full_name='omnii.CoreStats.memory_percent', index=3,
+      number=4, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='network_tx', full_name='omnii.CoreStats.network_tx', index=4,
+      number=5, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='network_rx', full_name='omnii.CoreStats.network_rx', index=5,
+      number=6, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='blk_read', full_name='omnii.CoreStats.blk_read', index=6,
+      number=7, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='blk_write', full_name='omnii.CoreStats.blk_write', index=7,
+      number=8, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=984,
+  serialized_end=1161,
+)
+
+
+_STATSREPORT = _descriptor.Descriptor(
+  name='StatsReport',
+  full_name='omnii.StatsReport',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='generated_at', full_name='omnii.StatsReport.generated_at', index=0,
+      number=1, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='stats', full_name='omnii.StatsReport.stats', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1163,
+  serialized_end=1231,
+)
+
+
+_STATSREPORTREQUEST = _descriptor.Descriptor(
+  name='StatsReportRequest',
+  full_name='omnii.StatsReportRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='session_id', full_name='omnii.StatsReportRequest.session_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='report', full_name='omnii.StatsReportRequest.report', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1233,
+  serialized_end=1309,
+)
+
+
+_STATSREPORTRESPONSE = _descriptor.Descriptor(
+  name='StatsReportResponse',
+  full_name='omnii.StatsReportResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='accepted', full_name='omnii.StatsReportResponse.accepted', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='message', full_name='omnii.StatsReportResponse.message', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1311,
+  serialized_end=1367,
+)
+
+
 _TRIGGERUPDATEREQUEST = _descriptor.Descriptor(
   name='TriggerUpdateRequest',
   full_name='omnii.TriggerUpdateRequest',
@@ -588,8 +782,8 @@ _TRIGGERUPDATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=983,
-  serialized_end=1066,
+  serialized_start=1369,
+  serialized_end=1452,
 )
 
 
@@ -633,13 +827,15 @@ _TRIGGERUPDATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1068,
-  serialized_end=1140,
+  serialized_start=1454,
+  serialized_end=1526,
 )
 
 _HEARTBEATREQUEST.fields_by_name['system_info'].message_type = _SYSTEMINFO
 _UPDATEREPORT.fields_by_name['components'].message_type = _COMPONENTUPDATE
 _UPDATEREPORTREQUEST.fields_by_name['report'].message_type = _UPDATEREPORT
+_STATSREPORT.fields_by_name['stats'].message_type = _CORESTATS
+_STATSREPORTREQUEST.fields_by_name['report'].message_type = _STATSREPORT
 DESCRIPTOR.message_types_by_name['EnrollRequest'] = _ENROLLREQUEST
 DESCRIPTOR.message_types_by_name['EnrollResponse'] = _ENROLLRESPONSE
 DESCRIPTOR.message_types_by_name['HandshakeRequest'] = _HANDSHAKEREQUEST
@@ -651,6 +847,10 @@ DESCRIPTOR.message_types_by_name['ComponentUpdate'] = _COMPONENTUPDATE
 DESCRIPTOR.message_types_by_name['UpdateReport'] = _UPDATEREPORT
 DESCRIPTOR.message_types_by_name['UpdateReportRequest'] = _UPDATEREPORTREQUEST
 DESCRIPTOR.message_types_by_name['UpdateReportResponse'] = _UPDATEREPORTRESPONSE
+DESCRIPTOR.message_types_by_name['CoreStats'] = _CORESTATS
+DESCRIPTOR.message_types_by_name['StatsReport'] = _STATSREPORT
+DESCRIPTOR.message_types_by_name['StatsReportRequest'] = _STATSREPORTREQUEST
+DESCRIPTOR.message_types_by_name['StatsReportResponse'] = _STATSREPORTRESPONSE
 DESCRIPTOR.message_types_by_name['TriggerUpdateRequest'] = _TRIGGERUPDATEREQUEST
 DESCRIPTOR.message_types_by_name['TriggerUpdateResponse'] = _TRIGGERUPDATERESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -732,6 +932,34 @@ UpdateReportResponse = _reflection.GeneratedProtocolMessageType('UpdateReportRes
   ))
 _sym_db.RegisterMessage(UpdateReportResponse)
 
+CoreStats = _reflection.GeneratedProtocolMessageType('CoreStats', (_message.Message,), dict(
+  DESCRIPTOR = _CORESTATS,
+  __module__ = 'omnnii_pb2'
+  # @@protoc_insertion_point(class_scope:omnii.CoreStats)
+  ))
+_sym_db.RegisterMessage(CoreStats)
+
+StatsReport = _reflection.GeneratedProtocolMessageType('StatsReport', (_message.Message,), dict(
+  DESCRIPTOR = _STATSREPORT,
+  __module__ = 'omnnii_pb2'
+  # @@protoc_insertion_point(class_scope:omnii.StatsReport)
+  ))
+_sym_db.RegisterMessage(StatsReport)
+
+StatsReportRequest = _reflection.GeneratedProtocolMessageType('StatsReportRequest', (_message.Message,), dict(
+  DESCRIPTOR = _STATSREPORTREQUEST,
+  __module__ = 'omnnii_pb2'
+  # @@protoc_insertion_point(class_scope:omnii.StatsReportRequest)
+  ))
+_sym_db.RegisterMessage(StatsReportRequest)
+
+StatsReportResponse = _reflection.GeneratedProtocolMessageType('StatsReportResponse', (_message.Message,), dict(
+  DESCRIPTOR = _STATSREPORTRESPONSE,
+  __module__ = 'omnnii_pb2'
+  # @@protoc_insertion_point(class_scope:omnii.StatsReportResponse)
+  ))
+_sym_db.RegisterMessage(StatsReportResponse)
+
 TriggerUpdateRequest = _reflection.GeneratedProtocolMessageType('TriggerUpdateRequest', (_message.Message,), dict(
   DESCRIPTOR = _TRIGGERUPDATEREQUEST,
   __module__ = 'omnnii_pb2'
@@ -754,8 +982,8 @@ _OMNIISERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=1143,
-  serialized_end=1490,
+  serialized_start=1529,
+  serialized_end=1946,
   methods=[
   _descriptor.MethodDescriptor(
     name='Enroll',
@@ -794,9 +1022,18 @@ _OMNIISERVICE = _descriptor.ServiceDescriptor(
     options=None,
   ),
   _descriptor.MethodDescriptor(
+    name='ReportStats',
+    full_name='omnii.OmniiService.ReportStats',
+    index=4,
+    containing_service=None,
+    input_type=_STATSREPORTREQUEST,
+    output_type=_STATSREPORTRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
     name='TriggerUpdate',
     full_name='omnii.OmniiService.TriggerUpdate',
-    index=4,
+    index=5,
     containing_service=None,
     input_type=_TRIGGERUPDATEREQUEST,
     output_type=_TRIGGERUPDATERESPONSE,

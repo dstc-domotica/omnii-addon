@@ -16,3 +16,6 @@ HEARTBEAT_INTERVAL_SECONDS = 60
 
 # Update reporting interval (seconds)
 UPDATE_REPORT_INTERVAL_SECONDS = 3600
+
+# Core stats reporting interval (seconds)
+STATS_REPORT_INTERVAL_SECONDS = 60

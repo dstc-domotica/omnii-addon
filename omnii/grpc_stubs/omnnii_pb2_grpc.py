@@ -34,6 +34,11 @@ class OmniiServiceStub(object):
         request_serializer=omnnii__pb2.UpdateReportRequest.SerializeToString,
         response_deserializer=omnnii__pb2.UpdateReportResponse.FromString,
         )
+    self.ReportStats = channel.unary_unary(
+        '/omnii.OmniiService/ReportStats',
+        request_serializer=omnnii__pb2.StatsReportRequest.SerializeToString,
+        response_deserializer=omnnii__pb2.StatsReportResponse.FromString,
+        )
     self.TriggerUpdate = channel.unary_unary(
         '/omnii.OmniiService/TriggerUpdate',
         request_serializer=omnnii__pb2.TriggerUpdateRequest.SerializeToString,
@@ -73,6 +78,13 @@ class OmniiServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def ReportStats(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def TriggerUpdate(self, request, context):
     """Trigger an update on the addon (server -> addon request)
     """
@@ -102,6 +114,11 @@ def add_OmniiServiceServicer_to_server(servicer, server):
           servicer.ReportUpdates,
           request_deserializer=omnnii__pb2.UpdateReportRequest.FromString,
           response_serializer=omnnii__pb2.UpdateReportResponse.SerializeToString,
+      ),
+      'ReportStats': grpc.unary_unary_rpc_method_handler(
+          servicer.ReportStats,
+          request_deserializer=omnnii__pb2.StatsReportRequest.FromString,
+          response_serializer=omnnii__pb2.StatsReportResponse.SerializeToString,
       ),
       'TriggerUpdate': grpc.unary_unary_rpc_method_handler(
           servicer.TriggerUpdate,

@@ -9,6 +9,7 @@ service OmniiService {
   rpc Handshake (HandshakeRequest) returns (HandshakeResponse);
   rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
   rpc ReportUpdates (UpdateReportRequest) returns (UpdateReportResponse);
+  rpc ReportStats (StatsReportRequest) returns (StatsReportResponse);
 
   // Trigger an update on the addon (server -> addon request)
   rpc TriggerUpdate (TriggerUpdateRequest) returns (TriggerUpdateResponse);
@@ -82,6 +83,33 @@ message UpdateReportRequest {
 }
 
 message UpdateReportResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+// Core stats reporting
+message CoreStats {
+  double cpu_percent = 1;
+  int64 memory_usage = 2;
+  int64 memory_limit = 3;
+  double memory_percent = 4;
+  int64 network_tx = 5;
+  int64 network_rx = 6;
+  int64 blk_read = 7;
+  int64 blk_write = 8;
+}
+
+message StatsReport {
+  int64 generated_at = 1;        // Unix timestamp (seconds)
+  CoreStats stats = 2;
+}
+
+message StatsReportRequest {
+  string session_id = 1;
+  StatsReport report = 2;
+}
+
+message StatsReportResponse {
   bool accepted = 1;
   string message = 2;
 }
