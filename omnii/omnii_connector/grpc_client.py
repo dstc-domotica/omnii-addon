@@ -5,6 +5,8 @@ import threading
 import time
 from typing import Dict, Optional, Sequence, Tuple
 
+import requests
+
 import grpc
 
 from grpc_stubs import omnnii_pb2, omnnii_pb2_grpc
@@ -13,6 +15,7 @@ from .constants import (
     HEARTBEAT_INTERVAL_SECONDS,
     STATS_REPORT_INTERVAL_SECONDS,
     UPDATE_REPORT_INTERVAL_SECONDS,
+    CONNECTIVITY_CHECK_INTERVAL_SECONDS,
 )
 from .enrollment_store import load_enrollment_data, save_enrollment_data
 from .supervisor_api import SupervisorClient
@@ -44,6 +47,7 @@ class OmniiGrpcClient:
         self.heartbeat_timer: Optional[threading.Timer] = None
         self.update_report_timer: Optional[threading.Timer] = None
         self.stats_report_timer: Optional[threading.Timer] = None
+        self.connectivity_timer: Optional[threading.Timer] = None
         self.last_full_info_time: float = 0
 
         self.supervisor = SupervisorClient()
@@ -88,7 +92,9 @@ class OmniiGrpcClient:
                                     + b"-----END CERTIFICATE-----\n"
                                 )
                                 root_certificates = pem_cert
-                                print("TLS verification skipped: using server's certificate directly")
+                                print(
+                                    "TLS verification skipped: using server's certificate directly"
+                                )
                 except Exception as e:
                     print(f"Warning: Could not fetch server certificate: {e}")
                     print("Falling back to insecure channel (no TLS)")
@@ -150,9 +156,7 @@ class OmniiGrpcClient:
 
         self.access_token = self.enrollment_data.get("accessToken")
         self.refresh_token = self.enrollment_data.get("refreshToken")
-        self.access_token_expires_at = self.enrollment_data.get(
-            "accessTokenExpiresAt"
-        )
+        self.access_token_expires_at = self.enrollment_data.get("accessTokenExpiresAt")
 
         if not self.refresh_token:
             print("Missing refresh token. Please re-enroll.")
@@ -233,6 +237,7 @@ class OmniiGrpcClient:
         self._schedule_heartbeat()
         self.start_update_reporting()
         self.start_stats_reporting()
+        self.start_connectivity_checks()
 
     def _schedule_heartbeat(self) -> None:
         if not self.running:
@@ -343,12 +348,12 @@ class OmniiGrpcClient:
                 )
 
             request = omnnii_pb2.UpdateReportRequest(report=report)
-            response = self._call_with_auth(self.stub.ReportUpdates, request, timeout=15)
+            response = self._call_with_auth(
+                self.stub.ReportUpdates, request, timeout=15
+            )
 
             if response.accepted:
-                print(
-                    f"Update report sent ({len(components)} components, accepted)"
-                )
+                print(f"Update report sent ({len(components)} components, accepted)")
             else:
                 print(f"Update report rejected: {response.message}")
         except grpc.RpcError as e:
@@ -419,6 +424,98 @@ class OmniiGrpcClient:
         except Exception as e:
             print(f"Core stats report failed: {e}")
 
+    def start_connectivity_checks(self) -> None:
+        if not self.running:
+            return
+        print(
+            "Starting connectivity checks "
+            f"({CONNECTIVITY_CHECK_INTERVAL_SECONDS} second interval)..."
+        )
+        self.send_connectivity_report()
+        self._schedule_connectivity_check()
+
+    def _schedule_connectivity_check(self) -> None:
+        if not self.running:
+            return
+        self.connectivity_timer = threading.Timer(
+            CONNECTIVITY_CHECK_INTERVAL_SECONDS, self._connectivity_check_loop
+        )
+        self.connectivity_timer.daemon = True
+        self.connectivity_timer.start()
+
+    def _connectivity_check_loop(self) -> None:
+        if not self.running:
+            return
+        self.send_connectivity_report()
+        if self.running:
+            self._schedule_connectivity_check()
+
+    def _fetch_public_ip(self) -> Optional[str]:
+        try:
+            response = requests.get("https://api.ipify.org?format=json", timeout=5)
+            if not response.ok:
+                print(
+                    "Connectivity check failed to fetch public IP: "
+                    f"status {response.status_code}"
+                )
+                return None
+            data = response.json()
+            ip = data.get("ip")
+            return ip if isinstance(ip, str) and ip else None
+        except Exception as e:
+            print(f"Connectivity check failed to fetch public IP: {e}")
+            return None
+
+    def _probe_target(
+        self, target: str, port: int = 53, timeout: float = 2.5
+    ) -> Tuple[str, Optional[int], Optional[str]]:
+        start = time.perf_counter()
+        try:
+            with socket.create_connection((target, port), timeout=timeout):
+                latency_ms = int((time.perf_counter() - start) * 1000)
+                return ("reachable", latency_ms, None)
+        except socket.timeout as e:
+            return ("timeout", None, str(e))
+        except Exception as e:
+            return ("unreachable", None, str(e))
+
+    def send_connectivity_report(self) -> None:
+        if not self.running or not self.stub:
+            return
+
+        try:
+            public_ip = self._fetch_public_ip()
+            targets = ["8.8.8.8", "1.1.1.1"]
+            client_timestamp = int(time.time() * 1000)
+            request = omnnii_pb2.ConnectivityReportRequest(
+                client_timestamp=client_timestamp,
+                public_ip=public_ip or "",
+            )
+
+            for target in targets:
+                status, latency_ms, error = self._probe_target(target)
+                request.checks.append(
+                    omnnii_pb2.ConnectivityCheck(
+                        target=target,
+                        status=status,
+                        latency_ms=latency_ms or 0,
+                        error=error or "",
+                    )
+                )
+
+            response = self._call_with_auth(
+                self.stub.ReportConnectivity, request, timeout=10
+            )
+
+            if response.accepted:
+                print("Connectivity report sent (accepted)")
+            else:
+                print(f"Connectivity report rejected: {response.message}")
+        except grpc.RpcError as e:
+            print(f"Connectivity report failed: {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Connectivity report failed: {e}")
+
     def stop(self) -> None:
         print("Stopping add-on...")
         self.running = False
@@ -431,7 +528,9 @@ class OmniiGrpcClient:
         if self.stats_report_timer:
             self.stats_report_timer.cancel()
             self.stats_report_timer = None
+        if self.connectivity_timer:
+            self.connectivity_timer.cancel()
+            self.connectivity_timer = None
         if self.channel:
             self.channel.close()
             self.channel = None
-

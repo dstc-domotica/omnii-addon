@@ -59,6 +59,11 @@ class OmniiServiceStub(object):
                 request_serializer=omnnii__pb2.StatsReportRequest.SerializeToString,
                 response_deserializer=omnnii__pb2.StatsReportResponse.FromString,
                 _registered_method=True)
+        self.ReportConnectivity = channel.unary_unary(
+                '/omnii.OmniiService/ReportConnectivity',
+                request_serializer=omnnii__pb2.ConnectivityReportRequest.SerializeToString,
+                response_deserializer=omnnii__pb2.ConnectivityReportResponse.FromString,
+                _registered_method=True)
         self.TriggerUpdate = channel.unary_unary(
                 '/omnii.OmniiService/TriggerUpdate',
                 request_serializer=omnnii__pb2.TriggerUpdateRequest.SerializeToString,
@@ -102,6 +107,12 @@ class OmniiServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReportConnectivity(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def TriggerUpdate(self, request, context):
         """Trigger an update on the addon (server -> addon request)
         """
@@ -136,6 +147,11 @@ def add_OmniiServiceServicer_to_server(servicer, server):
                     servicer.ReportStats,
                     request_deserializer=omnnii__pb2.StatsReportRequest.FromString,
                     response_serializer=omnnii__pb2.StatsReportResponse.SerializeToString,
+            ),
+            'ReportConnectivity': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReportConnectivity,
+                    request_deserializer=omnnii__pb2.ConnectivityReportRequest.FromString,
+                    response_serializer=omnnii__pb2.ConnectivityReportResponse.SerializeToString,
             ),
             'TriggerUpdate': grpc.unary_unary_rpc_method_handler(
                     servicer.TriggerUpdate,
@@ -278,6 +294,33 @@ class OmniiService(object):
             '/omnii.OmniiService/ReportStats',
             omnnii__pb2.StatsReportRequest.SerializeToString,
             omnnii__pb2.StatsReportResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReportConnectivity(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/omnii.OmniiService/ReportConnectivity',
+            omnnii__pb2.ConnectivityReportRequest.SerializeToString,
+            omnnii__pb2.ConnectivityReportResponse.FromString,
             options,
             channel_credentials,
             insecure,
