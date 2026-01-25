@@ -1,3 +1,6 @@
+import base64
+import socket
+import ssl
 import threading
 import time
 from typing import Dict, Optional, Sequence, Tuple
@@ -58,18 +61,45 @@ class OmniiGrpcClient:
             except Exception as e:
                 print(f"Failed to read TLS CA cert: {e}")
                 raise
-        elif self.tls_skip_verify:
-            print(
-                "TLS hostname verification override enabled; provide grpc_tls_ca_cert to trust a self-signed certificate."
-            )
 
-        credentials = grpc.ssl_channel_credentials(root_certificates=root_certificates)
         options: Sequence[Tuple[str, str]] = []
+
         if self.tls_skip_verify:
+            if not self.tls_ca_cert:
+                # Fetch the server's certificate and use it directly to skip verification
+                # This trusts the certificate presented by the server without CA validation
+                host, port_str = server_url.rsplit(":", 1)
+                port = int(port_str)
+
+                try:
+                    # Create an unverified SSL context to fetch the server's certificate
+                    context = ssl.create_default_context()
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+
+                    with socket.create_connection((host, port), timeout=10) as sock:
+                        with context.wrap_socket(sock, server_hostname=host) as ssock:
+                            der_cert = ssock.getpeercert(binary_form=True)
+                            if der_cert:
+                                # Convert DER to PEM format
+                                pem_cert = (
+                                    b"-----BEGIN CERTIFICATE-----\n"
+                                    + base64.encodebytes(der_cert)
+                                    + b"-----END CERTIFICATE-----\n"
+                                )
+                                root_certificates = pem_cert
+                                print("TLS verification skipped: using server's certificate directly")
+                except Exception as e:
+                    print(f"Warning: Could not fetch server certificate: {e}")
+                    print("Falling back to insecure channel (no TLS)")
+                    return grpc.insecure_channel(server_url)
+
             options = [
                 ("grpc.ssl_target_name_override", "omnii-grpc"),
                 ("grpc.default_authority", "omnii-grpc"),
             ]
+
+        credentials = grpc.ssl_channel_credentials(root_certificates=root_certificates)
         return grpc.secure_channel(server_url, credentials, options=options)
 
     def enroll(self) -> bool:
