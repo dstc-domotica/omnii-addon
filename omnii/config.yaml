@@ -15,6 +15,10 @@ homeassistant_api: true
 options:
   server_url: ""
   enrollment_code: ""
+  grpc_tls_skip_verify: false
+  grpc_tls_ca_cert: ""
 schema:
   server_url: str
   enrollment_code: str
+  grpc_tls_skip_verify: bool
+  grpc_tls_ca_cert: str?

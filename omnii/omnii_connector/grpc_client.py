@@ -1,6 +1,6 @@
 import threading
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence, Tuple
 
 import grpc
 
@@ -16,7 +16,13 @@ from .supervisor_api import SupervisorClient
 
 
 class OmniiGrpcClient:
-    def __init__(self, server_url: str, enrollment_code: str):
+    def __init__(
+        self,
+        server_url: str,
+        enrollment_code: str,
+        tls_skip_verify: bool = False,
+        tls_ca_cert: Optional[str] = None,
+    ):
         # server_url is the gRPC server address (e.g., "192.168.1.100:50051")
         self.server_url = server_url.rstrip("/")
         self.enrollment_code = enrollment_code
@@ -24,7 +30,11 @@ class OmniiGrpcClient:
         self.enrollment_data: Optional[Dict] = None
         self.channel: Optional[grpc.Channel] = None
         self.stub: Optional[omnnii_pb2_grpc.OmniiServiceStub] = None
-        self.session_id: Optional[str] = None
+        self.access_token: Optional[str] = None
+        self.refresh_token: Optional[str] = None
+        self.access_token_expires_at: Optional[int] = None
+        self.tls_skip_verify = tls_skip_verify
+        self.tls_ca_cert = tls_ca_cert
 
         self.running = False
         self.start_time = time.time()
@@ -39,15 +49,35 @@ class OmniiGrpcClient:
         self.enrollment_data = load_enrollment_data()
         return self.enrollment_data is not None
 
-    def _create_channel(self) -> grpc.Channel:
-        return grpc.insecure_channel(self.server_url)
+    def _create_channel(self, server_url: str) -> grpc.Channel:
+        root_certificates = None
+        if self.tls_ca_cert:
+            try:
+                with open(self.tls_ca_cert, "rb") as cert_file:
+                    root_certificates = cert_file.read()
+            except Exception as e:
+                print(f"Failed to read TLS CA cert: {e}")
+                raise
+        elif self.tls_skip_verify:
+            print(
+                "TLS hostname verification override enabled; provide grpc_tls_ca_cert to trust a self-signed certificate."
+            )
+
+        credentials = grpc.ssl_channel_credentials(root_certificates=root_certificates)
+        options: Sequence[Tuple[str, str]] = []
+        if self.tls_skip_verify:
+            options = [
+                ("grpc.ssl_target_name_override", "omnii-grpc"),
+                ("grpc.default_authority", "omnii-grpc"),
+            ]
+        return grpc.secure_channel(server_url, credentials, options=options)
 
     def enroll(self) -> bool:
         """Enroll with the server via gRPC."""
         try:
             print(f"Enrolling with gRPC server at {self.server_url}...")
 
-            channel = self._create_channel()
+            channel = self._create_channel(self.server_url)
             stub = omnnii_pb2_grpc.OmniiServiceStub(channel)
 
             response = stub.Enroll(
@@ -58,7 +88,9 @@ class OmniiGrpcClient:
             if response.success:
                 self.enrollment_data = {
                     "instanceId": response.instance_id,
-                    "token": response.token,
+                    "accessToken": response.access_token,
+                    "refreshToken": response.refresh_token,
+                    "accessTokenExpiresAt": response.access_token_expires_at,
                     "grpcServerUrl": self.server_url,
                 }
                 print(f"Enrolled successfully. Instance ID: {response.instance_id}")
@@ -75,7 +107,7 @@ class OmniiGrpcClient:
             return False
 
     def connect_and_handshake(self) -> bool:
-        """Connect to the gRPC server and perform handshake."""
+        """Connect to the gRPC server and prepare authenticated calls."""
         if not self.enrollment_data:
             print("Not enrolled. Call enroll() first.")
             return False
@@ -83,29 +115,83 @@ class OmniiGrpcClient:
         grpc_url = self.enrollment_data.get("grpcServerUrl", self.server_url)
         print(f"Connecting to gRPC server at {grpc_url}...")
 
-        self.channel = grpc.insecure_channel(grpc_url)
+        self.channel = self._create_channel(grpc_url)
         self.stub = omnnii_pb2_grpc.OmniiServiceStub(self.channel)
 
-        instance_id = self.enrollment_data.get("instanceId", "unknown")
-        token = self.enrollment_data.get("token", "")
+        self.access_token = self.enrollment_data.get("accessToken")
+        self.refresh_token = self.enrollment_data.get("refreshToken")
+        self.access_token_expires_at = self.enrollment_data.get(
+            "accessTokenExpiresAt"
+        )
+
+        if not self.refresh_token:
+            print("Missing refresh token. Please re-enroll.")
+            return False
+
+        if not self._ensure_access_token():
+            print("Failed to refresh access token.")
+            return False
+
+        self.running = True
+        return True
+
+    def _token_expired(self) -> bool:
+        if not self.access_token_expires_at:
+            return True
+        return int(time.time()) >= int(self.access_token_expires_at) - 30
+
+    def _auth_metadata(self) -> list:
+        return [("authorization", f"Bearer {self.access_token}")]
+
+    def _ensure_access_token(self) -> bool:
+        if not self.access_token or self._token_expired():
+            return self.refresh_access_token()
+        return True
+
+    def refresh_access_token(self) -> bool:
+        if not self.stub or not self.refresh_token:
+            return False
 
         try:
-            response = self.stub.Handshake(
-                omnnii_pb2.HandshakeRequest(addon_id=instance_id, token=token),
+            response = self.stub.RefreshToken(
+                omnnii_pb2.RefreshTokenRequest(refresh_token=self.refresh_token),
                 timeout=10,
             )
-
-            if response.status == "ok":
-                self.session_id = response.session_id
-                print(f"Handshake completed. Session ID: {self.session_id[:16]}...")
-                self.running = True
+            if response.success:
+                self.access_token = response.access_token
+                if response.refresh_token:
+                    self.refresh_token = response.refresh_token
+                self.access_token_expires_at = response.access_token_expires_at
+                if self.enrollment_data is not None:
+                    self.enrollment_data.update(
+                        {
+                            "accessToken": self.access_token,
+                            "refreshToken": self.refresh_token,
+                            "accessTokenExpiresAt": self.access_token_expires_at,
+                        }
+                    )
+                    save_enrollment_data(self.enrollment_data)
                 return True
 
-            print(f"Handshake failed: {response.status}")
+            print(f"Refresh token failed: {response.error}")
             return False
         except grpc.RpcError as e:
-            print(f"gRPC Handshake failed: {e.code()}: {e.details()}")
+            print(f"Refresh token error: {e.code()}: {e.details()}")
             return False
+
+    def _call_with_auth(self, rpc, request, timeout: int):
+        if not self._ensure_access_token():
+            raise RuntimeError("Access token unavailable")
+
+        metadata = self._auth_metadata()
+        try:
+            return rpc(request, timeout=timeout, metadata=metadata)
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.UNAUTHENTICATED:
+                if self.refresh_access_token():
+                    metadata = self._auth_metadata()
+                    return rpc(request, timeout=timeout, metadata=metadata)
+            raise
 
     def start_heartbeat(self) -> None:
         if not self.running:
@@ -138,14 +224,12 @@ class OmniiGrpcClient:
             self._schedule_heartbeat()
 
     def send_heartbeat(self, include_full_info: bool = False) -> None:
-        if not self.running or not self.session_id or not self.stub:
+        if not self.running or not self.stub:
             return
 
         try:
             client_timestamp = int(time.time() * 1000)
-            request = omnnii_pb2.HeartbeatRequest(
-                session_id=self.session_id, client_timestamp=client_timestamp
-            )
+            request = omnnii_pb2.HeartbeatRequest(client_timestamp=client_timestamp)
 
             if include_full_info:
                 supervisor_info = self.supervisor.get_info()
@@ -169,7 +253,7 @@ class OmniiGrpcClient:
             else:
                 print("Heartbeat sent (minimal)")
 
-            response = self.stub.Heartbeat(request, timeout=10)
+            response = self._call_with_auth(self.stub.Heartbeat, request, timeout=10)
 
             if not response.alive:
                 print("Server indicated session is not alive, reconnecting...")
@@ -179,6 +263,8 @@ class OmniiGrpcClient:
 
         except grpc.RpcError as e:
             print(f"Heartbeat failed: {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Heartbeat failed: {e}")
 
     def start_update_reporting(self) -> None:
         if not self.running:
@@ -208,7 +294,7 @@ class OmniiGrpcClient:
             self._schedule_update_report()
 
     def send_update_report(self) -> None:
-        if not self.running or not self.session_id or not self.stub:
+        if not self.running or not self.stub:
             return
 
         try:
@@ -226,10 +312,8 @@ class OmniiGrpcClient:
                     )
                 )
 
-            request = omnnii_pb2.UpdateReportRequest(
-                session_id=self.session_id, report=report
-            )
-            response = self.stub.ReportUpdates(request, timeout=15)
+            request = omnnii_pb2.UpdateReportRequest(report=report)
+            response = self._call_with_auth(self.stub.ReportUpdates, request, timeout=15)
 
             if response.accepted:
                 print(
@@ -239,6 +323,8 @@ class OmniiGrpcClient:
                 print(f"Update report rejected: {response.message}")
         except grpc.RpcError as e:
             print(f"Update report failed: {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Update report failed: {e}")
 
     def start_stats_reporting(self) -> None:
         if not self.running:
@@ -268,7 +354,7 @@ class OmniiGrpcClient:
             self._schedule_stats_report()
 
     def send_stats_report(self) -> None:
-        if not self.running or not self.session_id or not self.stub:
+        if not self.running or not self.stub:
             return
 
         try:
@@ -291,10 +377,8 @@ class OmniiGrpcClient:
                 )
             )
 
-            request = omnnii_pb2.StatsReportRequest(
-                session_id=self.session_id, report=report
-            )
-            response = self.stub.ReportStats(request, timeout=10)
+            request = omnnii_pb2.StatsReportRequest(report=report)
+            response = self._call_with_auth(self.stub.ReportStats, request, timeout=10)
 
             if response.accepted:
                 print("Core stats report sent (accepted)")
@@ -302,6 +386,8 @@ class OmniiGrpcClient:
                 print(f"Core stats report rejected: {response.message}")
         except grpc.RpcError as e:
             print(f"Core stats report failed: {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Core stats report failed: {e}")
 
     def stop(self) -> None:
         print("Stopping add-on...")

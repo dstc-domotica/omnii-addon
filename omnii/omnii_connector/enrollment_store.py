@@ -18,7 +18,9 @@ def save_enrollment_data(enrollment_data: Dict) -> None:
         json.dump(
             {
                 "instanceId": enrollment_data.get("instanceId"),
-                "token": enrollment_data.get("token"),
+                "accessToken": enrollment_data.get("accessToken"),
+                "refreshToken": enrollment_data.get("refreshToken"),
+                "accessTokenExpiresAt": enrollment_data.get("accessTokenExpiresAt"),
             },
             f,
         )
@@ -51,7 +53,9 @@ def load_enrollment_data() -> Optional[Dict]:
 
         enrollment_data = {
             **enrollment_metadata,
-            "token": credentials.get("token"),
+            "accessToken": credentials.get("accessToken") or credentials.get("token"),
+            "refreshToken": credentials.get("refreshToken"),
+            "accessTokenExpiresAt": credentials.get("accessTokenExpiresAt"),
         }
         print(f"Loaded enrollment data for instance: {enrollment_data['instanceId']}")
         return enrollment_data

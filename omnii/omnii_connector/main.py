@@ -18,6 +18,8 @@ def main() -> None:
     client = OmniiGrpcClient(
         server_url=config["server_url"],
         enrollment_code=config["enrollment_code"],
+        tls_skip_verify=bool(config.get("grpc_tls_skip_verify")),
+        tls_ca_cert=config.get("grpc_tls_ca_cert") or None,
     )
 
     if client.load_existing_enrollment():

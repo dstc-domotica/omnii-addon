@@ -5,8 +5,10 @@ service OmniiService {
   // Enrollment - unauthenticated, only needs valid enrollment code
   rpc Enroll (EnrollRequest) returns (EnrollResponse);
 
-  // All methods below require token authentication
-  rpc Handshake (HandshakeRequest) returns (HandshakeResponse);
+  // Refresh short-lived access tokens
+  rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // All methods below require token authentication via metadata
   rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
   rpc ReportUpdates (UpdateReportRequest) returns (UpdateReportResponse);
   rpc ReportStats (StatsReportRequest) returns (StatsReportResponse);
@@ -23,17 +25,21 @@ message EnrollResponse {
   bool success = 1;
   string error = 2;           // Error message if success=false
   string instance_id = 3;     // e.g. "ha-a1b2"
-  string token = 4;           // The secret token for authentication
+  string access_token = 4;     // Short-lived JWT access token
+  string refresh_token = 5;    // Long-lived refresh token
+  int64 access_token_expires_at = 6; // Unix timestamp (seconds)
 }
 
-// Handshake messages
-message HandshakeRequest {
-  string addon_id = 1;
-  string token = 2;
+// Refresh token messages
+message RefreshTokenRequest {
+  string refresh_token = 1;
 }
-message HandshakeResponse {
-  string session_id = 1;
-  string status = 2;
+message RefreshTokenResponse {
+  bool success = 1;
+  string error = 2;
+  string access_token = 3;
+  string refresh_token = 4;
+  int64 access_token_expires_at = 5; // Unix timestamp (seconds)
 }
 
 // System information from Supervisor /info API
@@ -52,9 +58,8 @@ message SystemInfo {
 
 // Heartbeat messages - optional system info
 message HeartbeatRequest {
-  string session_id = 1;
-  SystemInfo system_info = 2;              // Optional - sent periodically
-  int64 client_timestamp = 3;              // Client-side timestamp for RTT calculation
+  SystemInfo system_info = 1;              // Optional - sent periodically
+  int64 client_timestamp = 2;              // Client-side timestamp for RTT calculation
 }
 message HeartbeatResponse {
   bool alive = 1;
@@ -78,8 +83,7 @@ message UpdateReport {
 }
 
 message UpdateReportRequest {
-  string session_id = 1;
-  UpdateReport report = 2;
+  UpdateReport report = 1;
 }
 
 message UpdateReportResponse {
@@ -105,8 +109,7 @@ message StatsReport {
 }
 
 message StatsReportRequest {
-  string session_id = 1;
-  StatsReport report = 2;
+  StatsReport report = 1;
 }
 
 message StatsReportResponse {
@@ -116,9 +119,8 @@ message StatsReportResponse {
 
 // Trigger update messages - server asks addon to perform an update
 message TriggerUpdateRequest {
-  string session_id = 1;
-  string update_type = 2;     // "core", "os", "supervisor", "addon"
-  string addon_slug = 3;      // Only needed if update_type is "addon"
+  string update_type = 1;     // "core", "os", "supervisor", "addon"
+  string addon_slug = 2;      // Only needed if update_type is "addon"
 }
 message TriggerUpdateResponse {
   bool success = 1;
