@@ -65,6 +65,15 @@ message HeartbeatResponse {
   bool alive = 1;
   int64 time = 2;
   int64 latency_ms = 3; // Round-trip latency in milliseconds
+  PendingUpdate pending_update =
+      4; // Optional pending update request from server
+}
+
+// Pending update request from server to addon
+message PendingUpdate {
+  bool has_update = 1;    // Whether there's a pending update
+  string update_type = 2; // "core", "os", "supervisor", "addon"
+  string addon_slug = 3;  // Only set if update_type is "addon"
 }
 
 // Update reporting messages
@@ -132,13 +141,15 @@ message ConnectivityReportResponse {
   string message = 2;
 }
 
-// Trigger update messages - server asks addon to perform an update
+// Trigger update messages - addon reports result of update execution
 message TriggerUpdateRequest {
   string update_type = 1; // "core", "os", "supervisor", "addon"
   string addon_slug = 2;  // Only needed if update_type is "addon"
+  bool success = 3;       // Whether the update was successful
+  string error = 4;       // Error message if failed
+  string message = 5;     // Status message (e.g., "Update started")
 }
 message TriggerUpdateResponse {
-  bool success = 1;
-  string error = 2;
-  string message = 3; // Status message (e.g., "Update started")
+  bool accepted = 1;  // Whether the server accepted the result
+  string message = 2; // Response message
 }

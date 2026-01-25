@@ -296,10 +296,62 @@ class OmniiGrpcClient:
             elif response.latency_ms > 0:
                 print(f"Latency: {response.latency_ms}ms")
 
+            # Check for pending update request from server
+            if (
+                response.HasField("pending_update")
+                and response.pending_update.has_update
+            ):
+                self._handle_pending_update(
+                    response.pending_update.update_type,
+                    response.pending_update.addon_slug,
+                )
+
         except grpc.RpcError as e:
             print(f"Heartbeat failed: {e.code()}: {e.details()}")
         except Exception as e:
             print(f"Heartbeat failed: {e}")
+
+    def _handle_pending_update(self, update_type: str, addon_slug: str) -> None:
+        """Handle a pending update request from the server."""
+        print(
+            f"Received pending update request: {update_type} (slug: {addon_slug or 'N/A'})"
+        )
+
+        # Execute the update via Supervisor API
+        result = self.supervisor.trigger_update(update_type, addon_slug)
+
+        # Report result back to server
+        self._report_update_result(update_type, addon_slug, result)
+
+    def _report_update_result(
+        self, update_type: str, addon_slug: str, result: Dict
+    ) -> None:
+        """Report the result of an update execution back to the server."""
+        if not self.running or not self.stub:
+            return
+
+        try:
+            request = omnnii_pb2.TriggerUpdateRequest(
+                update_type=update_type,
+                addon_slug=addon_slug,
+                success=result.get("success", False),
+                error=result.get("error", ""),
+                message=result.get("message", ""),
+            )
+            response = self._call_with_auth(
+                self.stub.TriggerUpdate, request, timeout=15
+            )
+
+            if response.accepted:
+                print(
+                    f"Update result reported successfully: {result.get('message', '')}"
+                )
+            else:
+                print(f"Update result report not accepted: {response.message}")
+        except grpc.RpcError as e:
+            print(f"Failed to report update result: {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Failed to report update result: {e}")
 
     def start_update_reporting(self) -> None:
         if not self.running:
